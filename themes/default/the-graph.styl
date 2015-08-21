@@ -55,6 +55,8 @@ svg {
 .node-rect {
   fill: var-node;
   stroke: none;
+  -webkit-filter: drop-shadow( 3px 3px 2px rgba(0,0,0,.7) );
+  filter: drop-shadow( 3px 3px 2px rgba(0,0,0,.7) );
 }
 
 @-webkit-keyframes error {
@@ -246,11 +248,10 @@ path {
 
 
 text {
-  font-family: "SourceCodePro", "Source Code Pro", Helvetica, Arial, sans-serif;
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
   text-rendering: geometricPrecision; /* makes text scale smoothly */
-  font-size: 14px;
+  font-size: 11px;
   fill: var-type-a;
-  text-anchor: middle;
   dominant-baseline: central;
 }
 
@@ -260,7 +261,6 @@ text {
 
 .node-label,
 .node-sublabel {
-  text-anchor: middle;
 }
 .small .node-label-bg {
   visibility: hidden;
@@ -672,3 +672,25 @@ text {
   fill: var-route10
 
 
+.indicator-outer {
+  fill: #DCDCDC;
+}
+.indicator-inner {
+  fill: #26A8FB;
+}
+.indicator-inner.active {
+  fill: red;
+}
+path.port-over {
+  fill: #229EAE;
+}
+path.port-over.out-port {
+  fill: #CD6C38;
+}
+
+.port-bg {
+  fill: #27BACA;
+}
+.port-bg.out-port {
+  fill: #F97F41;
+}

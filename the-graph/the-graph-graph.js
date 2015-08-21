@@ -222,7 +222,7 @@
               outports: outports
             };
           }
-          
+
           var i, port, len;
           for (i=0, len=component.outports.length; i<len; i++) {
             port = component.outports[i];
@@ -371,6 +371,17 @@
       this.updatedIcons[nodeId] = icon;
       this.markDirty();
     },
+
+    updatedData: {},
+    updateData: function (nodeId, portName, data) {
+      if (!this.updatedData[nodeId]) {
+        this.updatedData[nodeId] = {};
+      }
+      this.updatedData[nodeId][portName] = data;
+      this.dirty = true;
+      this.forceUpdate();
+    },
+
     dirty: false,
     libraryDirty: false,
     markDirty: function (event) {
@@ -381,9 +392,6 @@
     },
     triggerRender: function (time) {
       if (!this.isMounted()) {
-        return;
-      }
-      if (this.dirty) {
         return;
       }
       this.dirty = true;
@@ -416,6 +424,7 @@
         };
       }
 
+      //console.log('graph.nodes:', graph.nodes);
       // Nodes
       var nodes = graph.nodes.map(function (node) {
         var componentInfo = self.getComponentInfo(node.component);
@@ -423,14 +432,15 @@
         if (!node.metadata) {
           node.metadata = {};
         }
-        if (node.metadata.x === undefined) { 
-          node.metadata.x = 0; 
+        if (node.metadata.x === undefined) {
+          node.metadata.x = 0;
         }
-        if (node.metadata.y === undefined) { 
-          node.metadata.y = 0; 
+        if (node.metadata.y === undefined) {
+          node.metadata.y = 0;
         }
-        if (node.metadata.width === undefined) { 
-          node.metadata.width = TheGraph.config.nodeWidth; 
+
+        if (node.metadata.width === undefined) {
+          node.metadata.width = TheGraph.config.nodeWidth;
         }
         node.metadata.height = TheGraph.config.nodeHeight;
         if (TheGraph.config.autoSizeNode && componentInfo) {
@@ -458,6 +468,13 @@
           selectedIds.push(key);
         }
 
+
+        // console.log('the-graph-graph.render -- self.updatedData[key]:', self.updatedData[key]);
+        var data = {};
+        if (self.updatedData[key]) {
+          data = JSON.parse(JSON.stringify(self.updatedData[key]));
+        }
+
         var nodeOptions = {
           key: key,
           nodeID: key,
@@ -478,7 +495,8 @@
           selected: selected,
           error: (self.state.errorNodes[key] === true),
           showContext: self.props.showContext,
-          highlightPort: highlightPort
+          highlightPort: highlightPort,
+          data: data
         };
 
         nodeOptions = TheGraph.merge(TheGraph.config.graph.node, nodeOptions);
@@ -541,7 +559,7 @@
       var iips = graph.initializers.map(function (iip) {
         var target = graph.getNode(iip.to.node);
         if (!target) { return; }
-        
+
         var targetPort = self.getNodeInport(graph, iip.to.node, iip.to.port, 0, target.component);
         var tX = target.metadata.x;
         var tY = target.metadata.y + targetPort.y;
@@ -570,8 +588,8 @@
         var label = key;
         var nodeKey = inport.process;
         var portKey = inport.port;
-        if (!inport.metadata) { 
-          inport.metadata = {x:0, y:0}; 
+        if (!inport.metadata) {
+          inport.metadata = {x:0, y:0};
         }
         var metadata = inport.metadata;
         if (!metadata.x) { metadata.x = 0; }
@@ -645,8 +663,8 @@
         var label = key;
         var nodeKey = outport.process;
         var portKey = outport.port;
-        if (!outport.metadata) { 
-          outport.metadata = {x:0, y:0}; 
+        if (!outport.metadata) {
+          outport.metadata = {x:0, y:0};
         }
         var metadata = outport.metadata;
         if (!metadata.x) { metadata.x = 0; }
@@ -745,7 +763,7 @@
 
       // Selection pseudo-group
       if (this.state.displaySelectionGroup &&
-          selectedIds.length >= 2) {
+        selectedIds.length >= 2) {
         var limits = TheGraph.findMinMax(graph, selectedIds);
         if (limits) {
           var pseudoGroup = {
@@ -831,12 +849,12 @@
       ];
 
       var selectedClass = (this.state.forceSelection ||
-                           selectedIds.length>0) ? ' selection' : '';
+      selectedIds.length>0) ? ' selection' : '';
 
       var containerOptions = TheGraph.merge(TheGraph.config.graph.container, { className: 'graph' + selectedClass });
       return TheGraph.factories.graph.createGraphContainerGroup.call(this, containerOptions, containerContents);
 
     }
-  }));  
+  }));
 
 })(this);

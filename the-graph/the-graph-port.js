@@ -25,7 +25,7 @@
 
   TheGraph.factories.port = {
     createPortGroup: TheGraph.factories.createGroup,
-    createPortBackgroundCircle: TheGraph.factories.createCircle,
+    createPortBackgroundCircle: TheGraph.factories.createRect,
     createPortArc: TheGraph.factories.createPath,
     createPortInnerCircle: TheGraph.factories.createCircle,
     createPortLabelText: TheGraph.factories.createText
@@ -101,14 +101,15 @@
       });
     },
     edgeStart: function (event) {
+      console.log('edgeStart');
       // Don't start edge on export node port
       if (this.props.isExport) {
         return;
       }
       // Click on label, pass context menu to node
-      if (event && (event.target === this.refs.label.getDOMNode())) {
-        return;
-      }
+      //if (event && (event.target === this.refs.label.getDOMNode())) {
+      //  return;
+      //}
       // Don't tap graph
       event.stopPropagation();
 
@@ -143,7 +144,7 @@
       var highlightPort = this.props.highlightPort;
       var inArc = TheGraph.arcs.inport;
       var outArc = TheGraph.arcs.outport;
-      if (highlightPort && highlightPort.isIn === this.props.isIn && (highlightPort.type === this.props.port.type || this.props.port.type === 'any')) {
+      if (highlightPort && highlightPort.isIn === this.props.isIn && highlightPort.type === this.props.port.type) {
         r = 6;
         inArc = TheGraph.arcs.inportBig;
         outArc = TheGraph.arcs.outportBig;
@@ -171,11 +172,27 @@
       labelTextOptions = TheGraph.merge(TheGraph.config.port.text, labelTextOptions);
       var labelText = TheGraph.factories.port.createPortLabelText.call(this, labelTextOptions);
 
+      var className = 'port-bg';
+      var portOverClassName = "port-over";
+      var x = -8;
+      var d = "M8 24 L8 0 L0 24 Z";
+      if (!this.props.isIn) {
+        className += ' out-port';
+        portOverClassName += ' out-port';
+        x = 0;
+        d = "M0 0 L8 0 L0 24 Z";
+      }
+
+      var backgroundOptions = TheGraph.merge(TheGraph.config.port.backgroundCircle, { x: x, y: -12, width: 8, height: 24, fill: '#27BACA', className: className});
+      var background = TheGraph.factories.port.createPortBackgroundCircle.call(this, backgroundOptions);
+
+      var over = TheGraph.factories.createPath({d: d, transform:"translate(" + x + ",-12)", className: portOverClassName});
+
       var portContents = [
-        backgroundCircle,
-        arc,
-        innerCircle,
-        labelText
+        background,
+        over,
+        //innerCircle,
+        //labelText
       ];
 
       var containerOptions = TheGraph.merge(TheGraph.config.port.container, { title: this.props.label, transform: "translate("+this.props.x+","+this.props.y+")" });

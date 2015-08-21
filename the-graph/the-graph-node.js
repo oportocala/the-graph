@@ -17,17 +17,10 @@
     },
     innerRect: {
       className: "node-rect drag",
-      x: 3,
-      y: 3,
-      rx: TheGraph.config.nodeRadius - 2,
-      ry: TheGraph.config.nodeRadius - 2
-    },
-    icon: {
-      ref: "icon",
-      className: "icon node-icon drag"
-    },
-    iconsvg: {
-      className: "icon node-icon drag"
+      x: 0,
+      y: 0,
+      rx: TheGraph.config.nodeRadius,
+      ry: TheGraph.config.nodeRadius
     },
     inports: {
       className: "inports"
@@ -38,20 +31,8 @@
     labelBackground: {
       className: "node-label-bg"
     },
-    labelRect: {
-      className: "text-bg-rect"
-    },
     labelText: {
       className: "node-label"
-    },
-    sublabelBackground: {
-      className: "node-sublabel-bg"
-    },
-    sublabelRect: {
-      className: "text-bg-rect"
-    },
-    sublabelText: {
-      className: "node-sublabel"
     }
   };
 
@@ -100,7 +81,7 @@
     ],
     componentDidMount: function () {
       var domNode = this.getDOMNode();
-      
+
       // Dragging
       domNode.addEventListener("trackstart", this.onTrackStart);
 
@@ -123,6 +104,13 @@
       var toggle = (TheGraph.metaKeyPressed || event.pointerType==="touch");
       this.props.onNodeSelection(this.props.nodeID, this.props.node, toggle);
     },
+
+    getInitialState: function () {
+      return {
+        indicatorActive: false
+      };
+    },
+
     onTrackStart: function (event) {
       // Don't drag graph
       event.stopPropagation();
@@ -325,9 +313,12 @@
       return (this.props.app.state.scale < TheGraph.zbpNormal);
     },
     shouldComponentUpdate: function (nextProps, nextState) {
-      // Only rerender if changed
+      if (nextProps.data !== this.props.data) {
+        this.pingLed();
+      }
+
       return (
-        nextProps.x !== this.props.x || 
+        nextProps.x !== this.props.x ||
         nextProps.y !== this.props.y ||
         nextProps.icon !== this.props.icon ||
         nextProps.label !== this.props.label ||
@@ -336,16 +327,35 @@
         nextProps.selected !== this.props.selected ||
         nextProps.error !== this.props.error ||
         nextProps.highlightPort !== this.props.highlightPort ||
-        nextProps.ports.dirty === true
+        nextProps.ports.dirty === true ||
+        nextProps.data != this.props.data ||
+        nextState.indicatorActive !== this.state.indicatorActive
       );
     },
+
+    pingLed: function () {
+      clearTimeout(this.ledTimeout);
+      this.ledTimeout = setTimeout(function () {
+        this.setState({indicatorActive: false});
+      }.bind(this), 300);
+
+      if (!this.state.indicatorActive) {
+        this.setState({indicatorActive: true});
+      }
+    },
+
     render: function() {
       if (this.props.ports.dirty) {
         // This tag is set when an edge or iip changes port colors
         this.props.ports.dirty = false;
       }
 
-      var label = this.props.label;
+      var label = this.props.nodeID;
+
+      if (this.props.data && this.props.data.IN) {
+        label = this.props.data.IN;
+      }
+
       var sublabel = this.props.sublabel;
       if (!sublabel || sublabel === label) {
         sublabel = "";
@@ -424,37 +434,14 @@
         return TheGraph.factories.node.createNodePort(props);
       });
 
-      // Node Icon
-      var icon = TheGraph.FONT_AWESOME[ this.props.icon ];
-      if (!icon) {
-        icon = TheGraph.FONT_AWESOME.cog;
-      }
 
-      var iconContent;
-      if (this.props.iconsvg && this.props.iconsvg !== "") {
-          var iconSVGOptions = TheGraph.merge(TheGraph.config.node.iconsvg, {
-              src: this.props.iconsvg,
-              x: TheGraph.config.nodeRadius - 4,
-              y: TheGraph.config.nodeRadius - 4,
-              width: this.props.width - 10,
-              height: this.props.height - 10
-          });
-          iconContent = TheGraph.factories.node.createNodeIconSVG.call(this, iconSVGOptions);
-      } else {
-          var iconOptions = TheGraph.merge(TheGraph.config.node.icon, {
-              x: this.props.width / 2,
-              y: this.props.height / 2,
-              children: icon });
-          iconContent = TheGraph.factories.node.createNodeIconText.call(this, iconOptions);
-      }
-
-      var backgroundRectOptions = TheGraph.merge(TheGraph.config.node.background, { width: this.props.width, height: this.props.height + 25 });
+      var backgroundRectOptions = TheGraph.merge(TheGraph.config.node.background, { width: this.props.width, height: this.props.height });
       var backgroundRect = TheGraph.factories.node.createNodeBackgroundRect.call(this, backgroundRectOptions);
 
       var borderRectOptions = TheGraph.merge(TheGraph.config.node.border, { width: this.props.width, height: this.props.height });
       var borderRect = TheGraph.factories.node.createNodeBorderRect.call(this, borderRectOptions);
-      
-      var innerRectOptions = TheGraph.merge(TheGraph.config.node.innerRect, { width: this.props.width - 6, height: this.props.height - 6 });
+
+      var innerRectOptions = TheGraph.merge(TheGraph.config.node.innerRect, { width: this.props.width, height: this.props.height });
       var innerRect = TheGraph.factories.node.createNodeInnerRect.call(this, innerRectOptions);
 
       var inportsOptions = TheGraph.merge(TheGraph.config.node.inports, { children: inportViews });
@@ -463,41 +450,38 @@
       var outportsOptions = TheGraph.merge(TheGraph.config.node.outports, { children: outportViews });
       var outportsGroup = TheGraph.factories.node.createNodeOutportsGroup.call(this, outportsOptions);
 
-      var labelTextOptions = TheGraph.merge(TheGraph.config.node.labelText, { x: this.props.width / 2, y: this.props.height + 15, children: label });
+
+      var dataIndicatorOuter = TheGraph.factories.createCircle({cx: 15, cy: this.props.height - 15, r: 4, className: 'indicator-outer'});
+
+
+      var dataIndciatorInnerClassName = 'indicator-inner';
+      if (this.state.indicatorActive) {
+        dataIndciatorInnerClassName += ' active';
+      }
+      var dataIndicatorInner = TheGraph.factories.createCircle({cx: 15, cy: this.props.height - 15, r: 2, className: dataIndciatorInnerClassName});
+
+
+      var labelTextOptions = TheGraph.merge(TheGraph.config.node.labelText, { x: 28, y: this.props.height - 14, children: label });
       var labelText = TheGraph.factories.node.createNodeLabelText.call(this, labelTextOptions);
 
-      var labelRectX = this.props.width / 2;
-      var labelRectY = this.props.height + 15;
-      var labelRectOptions = buildLabelRectOptions(14, labelRectX, labelRectY, label.length, TheGraph.config.node.labelRect.className);
-      labelRectOptions = TheGraph.merge(TheGraph.config.node.labelRect, labelRectOptions);
-      var labelRect = TheGraph.factories.node.createNodeLabelRect.call(this, labelRectOptions);
-      var labelGroup = TheGraph.factories.node.createNodeLabelGroup.call(this, TheGraph.config.node.labelBackground, [labelRect, labelText]);
-
-      var sublabelTextOptions = TheGraph.merge(TheGraph.config.node.sublabelText, { x: this.props.width / 2, y: this.props.height + 30, children: sublabel });
-      var sublabelText = TheGraph.factories.node.createNodeSublabelText.call(this, sublabelTextOptions);
-
-      var sublabelRectX = this.props.width / 2;
-      var sublabelRectY = this.props.height + 30;
-      var sublabelRectOptions = buildLabelRectOptions(9, sublabelRectX, sublabelRectY, sublabel.length, TheGraph.config.node.sublabelRect.className);
-      sublabelRectOptions = TheGraph.merge(TheGraph.config.node.sublabelRect, sublabelRectOptions);
-      var sublabelRect = TheGraph.factories.node.createNodeSublabelRect.call(this, sublabelRectOptions);
-      var sublabelGroup = TheGraph.factories.node.createNodeSublabelGroup.call(this, TheGraph.config.node.sublabelBackground, [sublabelRect, sublabelText]);
+      var labelGroupOptions = TheGraph.merge(TheGraph.config.node.labelBackground);
+      var labelGroup = TheGraph.factories.node.createNodeLabelGroup.call(this, labelGroupOptions , [labelText]);
 
       var nodeContents = [
         backgroundRect,
         borderRect,
         innerRect,
-        iconContent,
         inportsGroup,
         outportsGroup,
-        labelGroup,
-        sublabelGroup
+        dataIndicatorOuter,
+        dataIndicatorInner,
+        labelGroup
       ];
 
       var nodeOptions = {
         className: "node drag"+
-          (this.props.selected ? " selected" : "")+
-          (this.props.error ? " error" : ""),
+        (this.props.selected ? " selected" : "")+
+        (this.props.error ? " error" : ""),
         name: this.props.nodeID,
         key: this.props.nodeID,
         title: label,

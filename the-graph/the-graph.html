@@ -40,8 +40,8 @@
       graphView: null,
       editable: true,
       autolayout: false,
-      grid: 72,
-      snap: 36,
+      grid: 160,
+      snap: 80,
       theme: "dark",
       selectedNodes: [],
       selectedNodesHash: {},
@@ -315,6 +315,10 @@
       updateIcon: function (nodeId, icon) {
         if (!this.graphView) { return; }
         this.graphView.updateIcon(nodeId, icon);
+      },
+      updateData: function (nodeId, portName, data) {
+        if (!this.graphView) { return; }
+        this.graphView.updateData(nodeId, portName, data);
       },
       rerender: function (options) {
         // This is throttled with rAF internally

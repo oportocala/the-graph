@@ -1,8 +1,9 @@
 (function (context) {
   "use strict";
 
-  var defaultNodeSize = 72;
-  var defaultNodeRadius = 8;
+  var defaultNodeSize = 160;
+  var defaultNodeRadius = 3;
+  var defaultNodeHeight = 104;
 
   // Dumb module setup
   var TheGraph = context.TheGraph = {
@@ -20,7 +21,7 @@
       nodeSize: defaultNodeSize,
       nodeWidth: defaultNodeSize,
       nodeRadius: defaultNodeRadius,
-      nodeHeight: defaultNodeSize,
+      nodeHeight: defaultNodeHeight,
       autoSizeNode: true,
       maxPortCount: 9,
       nodeHeightIncrement: 12,

@@ -22,7 +22,8 @@
 
     <!-- Fonts -->
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-    <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:400' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+
     <style>
       @font-face {
         /* we want the svg version */
@@ -73,7 +74,7 @@
       width="800" height="600"
       grid="72"
       snap="36"
-      theme="dark">
+      theme="light">
     </the-graph-editor>
 
     <the-graph-nav id="nav" width="216" height="162"></the-graph-nav>
@@ -91,6 +92,7 @@
     </div>
     <script type="text/javascript">
       Polymer.veiledElements = ["the-graph-editor"];
+      var editor;
       window.addEventListener('polymer-ready', function() {
         "use strict";
 
@@ -98,7 +100,7 @@
         document.body.removeChild( document.getElementById("loading") );
 
         // The graph editor
-        var editor = document.getElementById('editor');
+        editor = document.getElementById('editor');
 
         // Component library
         var library = {
@@ -108,8 +110,7 @@
             icon: 'eye',
             inports: [
               {'name': 'in0', 'type': 'all'},
-              {'name': 'in1', 'type': 'all'},
-              {'name': 'in2', 'type': 'all'}
+              {'name': 'in1', 'type': 'all'}
             ],
             outports: [
               {'name': 'out', 'type': 'all'}
@@ -149,6 +150,7 @@
         var addnode = function () {
           var id = Math.round(Math.random()*100000).toString(36);
           var component = Math.random() > 0.5 ? 'basic' : 'tall';
+          component = "basic";
           var metadata = {
             label: component,
             x: Math.round(Math.random()*800),
@@ -159,6 +161,21 @@
         };
         document.getElementById("addnode").addEventListener("click", addnode);
 
+        var randomGraph = function () {
+          for (var i=0; i<3; i++) {
+            var node = addnode();
+            addedge(node.id);
+            addedge(node.id);
+          }
+          setTimeout(function(){
+            // b/c ports change
+            editor.libraryRefresh();
+            editor.triggerAutolayout();
+          }, 500);
+        };
+
+        setTimeout(randomGraph, 100);
+
         // Add edge button
         var addedge = function (outNodeID) {
           var nodes = editor.nofloGraph.nodes;
@@ -168,7 +185,7 @@
           var node2 = nodes[Math.floor(Math.random()*len)].id;
           var port1 = 'out' + Math.floor(Math.random()*3);
           var port2 = 'in' + Math.floor(Math.random()*12);
-          var meta = { route: Math.floor(Math.random()*10) };
+          var meta = { route: 0 };
           var newEdge = editor.nofloGraph.addEdge(node1, port1, node2, port2, meta);
           return newEdge;
         };
@@ -180,18 +197,7 @@
         });
 
         // Random graph button
-        document.getElementById("random").addEventListener("click", function () {
-          for (var i=0; i<20; i++) {
-            var node = addnode();
-            addedge(node.id);
-            addedge(node.id);
-          }
-          setTimeout(function(){
-            // b/c ports change
-            editor.libraryRefresh();
-            editor.triggerAutolayout();
-          }, 500);
-        });
+        document.getElementById("random").addEventListener("click", randomGraph);
 
         // Clear button
         document.getElementById("clear").addEventListener("click", function () {
@@ -207,6 +213,7 @@
         window.addEventListener("resize", resize);
 
         resize();
+
       });
 
     </script>
