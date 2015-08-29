@@ -521,6 +521,7 @@
         scale: this.state.scale,
         app: this,
         library: this.props.library,
+        uiLibrary: this.props.uiLibrary,
         onNodeSelection: this.props.onNodeSelection,
         onEdgeSelection: this.props.onEdgeSelection,
         showContext: this.showContext

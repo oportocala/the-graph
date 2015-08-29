@@ -101,7 +101,6 @@
       });
     },
     edgeStart: function (event) {
-      console.log('edgeStart');
       // Don't start edge on export node port
       if (this.props.isExport) {
         return;

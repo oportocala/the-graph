@@ -152,7 +152,7 @@
   fill: rgba(230,238,240,0.94);
   stroke: none;
 }
-.the-graph-dark path {
+.the-graph-dark .edge path {
   fill: none;
 }
 .the-graph-dark .edge-bg {
@@ -316,6 +316,7 @@
 }
 .the-graph-dark .context-arc-icon-label {
   font-size: 12px;
+  text-anchor: middle;
 }
 .the-graph-dark .context-port-bg {
   fill: rgba(43,48,54,0.95);
@@ -686,14 +687,17 @@
 .the-graph-dark .fill.route10 {
   fill: #e80262;
 }
-.the-graph-dark .indicator-outer {
-  fill: #dcdcdc;
-}
-.the-graph-dark .indicator-inner {
+.the-graph-dark .node .header .indicator .inner {
   fill: #26a8fb;
 }
-.the-graph-dark .indicator-inner.active {
+.the-graph-dark .node .header .indicator .outer {
+  fill: #dcdcdc;
+}
+.the-graph-dark .node .header .indicator.active .inner {
   fill: #f00;
+}
+.the-graph-dark .node .header text {
+  text-anchor: left;
 }
 .the-graph-dark path.port-over {
   fill: #229eae;

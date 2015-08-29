@@ -1,4 +1,4 @@
-<polymer-element name="the-graph" attributes="graph menus library width height autolayout theme selectedNodes errorNodes selectedEdges animatedEdges getMenuDef pan scale maxZoom minZoom displaySelectionGroup forceSelection offsetY offsetX" touch-action="none">
+<polymer-element name="the-graph" attributes="graph menus library uiLibrary width height autolayout theme selectedNodes errorNodes selectedEdges animatedEdges getMenuDef pan scale maxZoom minZoom displaySelectionGroup forceSelection offsetY offsetX" touch-action="none">
 
 
   <template>
@@ -13,6 +13,7 @@
   <script type="text/javascript" src="./the-graph-graph.js"></script>
   <script type="text/javascript" src="./the-graph-node.js"></script>
   <script type="text/javascript" src="./the-graph-node-menu.js"></script>
+  <script type="text/javascript" src="./the-graph-node-header.js"></script>
   <script type="text/javascript" src="./the-graph-node-menu-port.js"></script>
   <script type="text/javascript" src="./the-graph-node-menu-ports.js"></script>
   <script type="text/javascript" src="./the-graph-port.js"></script>
@@ -30,6 +31,7 @@
     Polymer('the-graph', {
       graph: null,
       library: null,
+      uiLibrary: null,
       menus: null,
       width: 800,
       height: 600,
@@ -55,6 +57,7 @@
       offsetX: null,
       created: function () {
         this.library = {};
+        this.uiLibrary = {};
         // Default pan
         this.pan = [0,0];
         // Initializes the autolayouter
@@ -103,6 +106,7 @@
             maxZoom: this.maxZoom,
             height: this.height,
             library: this.library,
+            uiLibrary: this.uiLibrary,
             menus: this.menus,
             editable: this.editable,
             onEdgeSelection: this.onEdgeSelection.bind(this),

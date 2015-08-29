@@ -170,7 +170,7 @@ svg {
 
 
 
-path {
+.edge path {
   fill: none;
 }
 .edge-bg {
@@ -334,6 +334,7 @@ text {
 
 .context-arc-icon-label {
   font-size: 12px;
+  text-anchor: middle;
 }
 
 
@@ -672,15 +673,21 @@ text {
   fill: var-route10
 
 
-.indicator-outer {
-  fill: #DCDCDC;
-}
-.indicator-inner {
+.node .header .indicator .inner {
   fill: #26A8FB;
 }
-.indicator-inner.active {
+
+.node .header .indicator .outer {
+  fill: #DCDCDC;
+}
+
+.node .header .indicator.active .inner{
   fill: red;
 }
+.node .header text {
+  text-anchor: left;
+}
+
 path.port-over {
   fill: #229EAE;
 }

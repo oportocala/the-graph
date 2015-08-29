@@ -121,7 +121,7 @@
   fill: #bac2c4;
 }
 .the-graph-light .selection .node.selected .node-rect {
-  fill: $fff;
+  fill: #fff;
 }
 .the-graph-light .selection .node.selected .node-border {
   stroke: #808080;
@@ -149,10 +149,10 @@
   fill: none;
 }
 .the-graph-light .small .selection .node.selected .node-border {
-  fill: $fff;
+  fill: #fff;
   stroke: none;
 }
-.the-graph-light path {
+.the-graph-light .edge path {
   fill: none;
 }
 .the-graph-light .edge-bg {
@@ -316,6 +316,7 @@
 }
 .the-graph-light .context-arc-icon-label {
   font-size: 12px;
+  text-anchor: middle;
 }
 .the-graph-light .context-port-bg {
   fill: rgba(224,227,230,0.95);
@@ -686,14 +687,17 @@
 .the-graph-light .fill.route10 {
   fill: #cc006d;
 }
-.the-graph-light .indicator-outer {
-  fill: #dcdcdc;
-}
-.the-graph-light .indicator-inner {
+.the-graph-light .node .header .indicator .inner {
   fill: #26a8fb;
 }
-.the-graph-light .indicator-inner.active {
+.the-graph-light .node .header .indicator .outer {
+  fill: #dcdcdc;
+}
+.the-graph-light .node .header .indicator.active .inner {
   fill: #f00;
+}
+.the-graph-light .node .header text {
+  text-anchor: left;
 }
 .the-graph-light path.port-over {
   fill: #229eae;

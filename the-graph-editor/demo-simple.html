@@ -11,6 +11,7 @@
     <script src="../bower_components/hammerjs/hammer.min.js"></script>
     <script src="../bower_components/ease-djdeath/index.js"></script>
     <script src="../bower_components/react.animate-djdeath/react.animate.js"></script>
+    <script src="../bower_components/js-signals/dist/signals.min.js"></script>
 
     <!-- Browserify Libraries -->
     <script src="../build/noflo.js"></script>
@@ -19,6 +20,12 @@
     <link rel="import" href="../bower_components/polymer/polymer.html">
     <link rel="import" href="./the-graph-editor.html">
     <link rel="import" href="../the-graph-nav/the-graph-nav.html">
+
+    <!-- UI Kit -->
+    <script src="../../devicehub-ui-pack/dist/assets/main.js"></script>
+
+    <!--- Needed -->
+    <script type="text/javascript" src="../scripts/tower.js"></script>
 
     <!-- Fonts -->
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
@@ -84,7 +91,16 @@
       <button id="addnode">add node</button>
       <button id="addedge">add edge</button>
       <button id="random">random graph</button>
+      <button id="testg">test graph</button>
+
+      <button id="add-display">add display component</button>
+      <button id="add-switch">add switch component</button>
+
       <button id="clear">clear</button>
+      <br/>
+      <input type="text" id="send-to" placeholder="my-display" value="my-display">
+      <input type="text" id="send-data" placeholder="true">
+      <button id="send-data-btn">send</button>
     </div>
     <div id="loading" style="position:absolute; top:10px; left:10px; background-color:white; padding:10px; border-radius:5px;">
       <img src="loading.gif"/>
@@ -107,54 +123,58 @@
           basic: {
             name: 'basic',
             description: 'basic demo component',
-            icon: 'eye',
             inports: [
-              {'name': 'in0', 'type': 'all'},
-              {'name': 'in1', 'type': 'all'}
+              {'name': 'in', 'type': 'all'}
             ],
             outports: [
               {'name': 'out', 'type': 'all'}
             ]
           },
-          tall: {
-            name: 'tall',
-            description: 'tall demo component',
-            icon: 'cog',
+
+          "devicehub/display": {
+            name: 'DeviceHub display',
+            uiComponent: 'devicehub/display',
+            width: 160,
             inports: [
-              {'name': 'in0', 'type': 'all'},
-              {'name': 'in1', 'type': 'all'},
-              {'name': 'in2', 'type': 'all'},
-              {'name': 'in3', 'type': 'all'},
-              {'name': 'in4', 'type': 'all'},
-              {'name': 'in5', 'type': 'all'},
-              {'name': 'in6', 'type': 'all'},
-              {'name': 'in7', 'type': 'all'},
-              {'name': 'in8', 'type': 'all'},
-              {'name': 'in9', 'type': 'all'},
-              {'name': 'in10', 'type': 'all'},
-              {'name': 'in11', 'type': 'all'},
-              {'name': 'in12', 'type': 'all'}
+              {'name': 'in0', 'type': 'all'}
             ],
             outports: [
-              {'name': 'out0', 'type': 'all'}
+              {'name': 'out', 'type': 'all'}
+            ]
+          },
+
+          "devicehub/switch": {
+            name: 'Devicehub switch',
+            uiComponent: 'devicehub/switch',
+            width: 96,
+            inports: [
+              {'name': 'in0', 'type': 'all'},
+              {'name': 'toggle', 'type': 'bool', hidden: true}
+            ],
+            outports: [
+              {'name': 'out', 'type': 'all'}
             ]
           }
         };
+
+        var uiLibrary = window.DevicehubUIPack.getLibrary(window.Tower);
         editor.$.graph.library = library;
+        editor.$.graph.uiLibrary = uiLibrary;
 
         // Load empty graph
         var graph = {};
         editor.graph = graph;
 
         // Add node button
-        var addnode = function () {
-          var id = Math.round(Math.random()*100000).toString(36);
-          var component = Math.random() > 0.5 ? 'basic' : 'tall';
-          component = "basic";
+        var addnode = function (id, component) {
+          id = id || Math.round(Math.random()*100000).toString(36);
+          component = component || "basic";
           var metadata = {
+            component: component,
             label: component,
             x: Math.round(Math.random()*800),
-            y: Math.round(Math.random()*600)
+            y: Math.round(Math.random()*600),
+            width: library[component].width
           };
           var newNode = editor.nofloGraph.addNode(id, component, metadata);
           return newNode;
@@ -171,10 +191,39 @@
             // b/c ports change
             editor.libraryRefresh();
             editor.triggerAutolayout();
-          }, 500);
+          }, 200);
         };
 
-        setTimeout(randomGraph, 100);
+        var testGraph = function () {
+          addDisplay();
+          addSwitch();
+          for (var i=0; i<2; i++) {
+            var node = addnode('i'+i);
+            addedge(node.id);
+            addedge(node.id);
+          }
+
+          setTimeout(function(){
+            // b/c ports change
+            editor.libraryRefresh();
+            editor.triggerAutolayout();
+          }, 200);
+        };
+
+        setTimeout(testGraph, 300);
+
+        var addDisplay = function () {
+          addnode('my-display', "devicehub/display");
+        };
+        var addSwitch = function () {
+          addnode('my-switch', "devicehub/switch");
+        };
+
+        var sendDataTo = function (nodeId, data) {
+          nodeId = nodeId || 'my-display';
+          data = data || Math.round(Math.random()*100000);
+          Tower.packetReceived.dispatch({type: 'data', data: data, edge: 'xxx/xxx() OUT -> IN ' + nodeId + '()'});
+        };
 
         // Add edge button
         var addedge = function (outNodeID) {
@@ -183,8 +232,8 @@
           if ( len<1 ) { return; }
           var node1 = outNodeID || nodes[Math.floor(Math.random()*len)].id;
           var node2 = nodes[Math.floor(Math.random()*len)].id;
-          var port1 = 'out' + Math.floor(Math.random()*3);
-          var port2 = 'in' + Math.floor(Math.random()*12);
+          var port1 = 'out' + Math.floor(Math.random()*2);
+          var port2 = 'in' + Math.floor(Math.random()*2);
           var meta = { route: 0 };
           var newEdge = editor.nofloGraph.addEdge(node1, port1, node2, port2, meta);
           return newEdge;
@@ -198,6 +247,20 @@
 
         // Random graph button
         document.getElementById("random").addEventListener("click", randomGraph);
+
+        // Random graph button
+        document.getElementById("testg").addEventListener("click", testGraph);
+
+        // Random graph button
+        document.getElementById("add-display").addEventListener("click", addDisplay);
+        document.getElementById("add-switch").addEventListener("click", addSwitch);
+
+        // Random graph button
+        document.getElementById("send-data-btn").addEventListener("click", function () {
+          var data = document.getElementById('send-data').value;
+          var nodeId = document.getElementById('send-to').value;
+          sendDataTo(nodeId, data);
+        });
 
         // Clear button
         document.getElementById("clear").addEventListener("click", function () {

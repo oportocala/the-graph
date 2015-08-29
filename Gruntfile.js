@@ -10,7 +10,8 @@
       scripts: ['Gruntfile.js', 'the-*/*.js'],
       elements: ['the-*/*.html'],
       stylus: ['themes/*/*.styl'],
-      css: ['themes/*.css']
+      css: ['themes/*.css'],
+      dh: ['dh-components/*.cjsx']
     };
 
     var glob = require('glob');
@@ -33,6 +34,15 @@
           }
         }
       },
+
+      cjsx: {
+        compile: {
+          files: {
+            './build/dh.js': sources.dh // compile and concat into single file
+          }
+        }
+      },
+
       exec: {
         build_stylus: {
           command: 'node ./node_modules/stylus/bin/stylus ' + stylExpand
@@ -41,13 +51,17 @@
           command: 'node ./scripts/build-font-awesome-javascript.js'
         }
       },
+      reactify: {
+        'build/dh2.js': sources.dh
+      },
       browserify: {
         libs: {
           files: {
             'build/noflo.js': ['index.js'],
+            'build/dh2.js': sources.dh
           },
           options: {
-            transform: ['coffeeify']
+            transform: ['coffeeify', ['reactify',{"coffee": true}]]
           },
           browserifyOptions: {
             require: 'noflo'
@@ -84,6 +98,12 @@
         }
       },
       watch: {
+
+        dh: {
+          files: './dh-components/*.cjsx',
+          tasks: ['cjsx']
+        },
+
         scripts: {
           files: sources.scripts,
           tasks: ['jshint:force'],
@@ -124,6 +144,7 @@
     //   this.config('inlinelint.all.src', filepath);
     // }.bind(this));
 
+    this.loadNpmTasks('grunt-reactify');
     this.loadNpmTasks('grunt-bower-install-simple');
     this.loadNpmTasks('grunt-exec');
     this.loadNpmTasks('grunt-contrib-watch');
@@ -131,8 +152,11 @@
     this.loadNpmTasks('grunt-lint-inline');
     this.loadNpmTasks('grunt-contrib-connect');
     this.loadNpmTasks('grunt-browserify');
+    this.loadNpmTasks('grunt-coffee-react');
 
     this.registerTask('dev', ['test', 'connect:server', 'watch']);
+    this.registerTask('watch-dh', ['watch:dh']);
+
     this.registerTask('build', ['bower-install-simple', 'exec:build_stylus', 'exec:build_fa', 'browserify:libs']);
     this.registerTask('test', ['jshint:all', 'inlinelint:all', 'build']);
     this.registerTask('default', ['test']);

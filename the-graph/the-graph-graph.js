@@ -203,7 +203,11 @@
       }
     },
     getComponentInfo: function (componentName) {
-      return this.props.library[componentName];
+      var ret = this.props.library[componentName];
+      if (this.props.uiLibrary[componentName]) {
+        ret.ui = this.props.uiLibrary[componentName];
+      }
+      return ret;
     },
     portInfo: {},
     getPorts: function (graph, processName, componentName) {
@@ -372,16 +376,6 @@
       this.markDirty();
     },
 
-    updatedData: {},
-    updateData: function (nodeId, portName, data) {
-      if (!this.updatedData[nodeId]) {
-        this.updatedData[nodeId] = {};
-      }
-      this.updatedData[nodeId][portName] = data;
-      this.dirty = true;
-      this.forceUpdate();
-    },
-
     dirty: false,
     libraryDirty: false,
     markDirty: function (event) {
@@ -468,12 +462,7 @@
           selectedIds.push(key);
         }
 
-
-        // console.log('the-graph-graph.render -- self.updatedData[key]:', self.updatedData[key]);
-        var data = {};
-        if (self.updatedData[key]) {
-          data = JSON.parse(JSON.stringify(self.updatedData[key]));
-        }
+        //console.log(self, self.props);
 
         var nodeOptions = {
           key: key,
@@ -496,7 +485,7 @@
           error: (self.state.errorNodes[key] === true),
           showContext: self.props.showContext,
           highlightPort: highlightPort,
-          data: data
+          children: componentInfo.ui
         };
 
         nodeOptions = TheGraph.merge(TheGraph.config.graph.node, nodeOptions);

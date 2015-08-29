@@ -79,6 +79,8 @@
     mixins: [
       TheGraph.mixins.Tooltip
     ],
+    contentClass: false,
+
     componentDidMount: function () {
       var domNode = this.getDOMNode();
 
@@ -96,7 +98,25 @@
         this.getDOMNode().addEventListener("hold", this.showContext);
       }
 
+
+      if (Tower) {
+        Tower.dataReceived.add(this.onDataReceived);
+      } else {
+        console.log('TOWER NOT FOUND');
+      }
     },
+
+    componentWillUnmount: function () {
+      Tower.dataReceived.remove(this.onDataReceived);
+    },
+
+    onDataReceived: function (data, edgeInfo) {
+      if (edgeInfo.trgt.id === this.props.nodeID) {
+        this.triggerActiveIndicator();
+        this.setState({data: data});
+      }
+    },
+
     onNodeSelection: function (event) {
       // Don't tap app (unselect)
       event.stopPropagation();
@@ -107,7 +127,8 @@
 
     getInitialState: function () {
       return {
-        indicatorActive: false
+        indicatorActive: false,
+        data: undefined
       };
     },
 
@@ -313,10 +334,6 @@
       return (this.props.app.state.scale < TheGraph.zbpNormal);
     },
     shouldComponentUpdate: function (nextProps, nextState) {
-      if (nextProps.data !== this.props.data) {
-        this.pingLed();
-      }
-
       return (
         nextProps.x !== this.props.x ||
         nextProps.y !== this.props.y ||
@@ -328,12 +345,12 @@
         nextProps.error !== this.props.error ||
         nextProps.highlightPort !== this.props.highlightPort ||
         nextProps.ports.dirty === true ||
-        nextProps.data != this.props.data ||
-        nextState.indicatorActive !== this.state.indicatorActive
+        nextState.indicatorActive !== this.state.indicatorActive ||
+        nextState.data !== this.state.data
       );
     },
 
-    pingLed: function () {
+    triggerActiveIndicator: function () {
       clearTimeout(this.ledTimeout);
       this.ledTimeout = setTimeout(function () {
         this.setState({indicatorActive: false});
@@ -467,16 +484,37 @@
       var labelGroupOptions = TheGraph.merge(TheGraph.config.node.labelBackground);
       var labelGroup = TheGraph.factories.node.createNodeLabelGroup.call(this, labelGroupOptions , [labelText]);
 
+      var content;
+      if (this.props.children) {
+        content = React.createElement(this.props.children.class, {nodeID: this.props.nodeID});
+      }
+
+      var contentContainer = TheGraph.factories.createSvg.call(this, {
+        className: 'content',
+        width: this.props.width,
+        height: this.props.height - 32
+      } , [content]);
+
+      var header = TheGraph.NodeHeader({
+        text: label,
+        active: this.state.indicatorActive,
+        y: this.props.height - 32,
+        width: this.props.width
+      });
+
       var nodeContents = [
         backgroundRect,
         borderRect,
         innerRect,
         inportsGroup,
         outportsGroup,
-        dataIndicatorOuter,
+       /* dataIndicatorOuter,
         dataIndicatorInner,
-        labelGroup
+        labelGroup,*/
+        header,
+        contentContainer
       ];
+
 
       var nodeOptions = {
         className: "node drag"+
